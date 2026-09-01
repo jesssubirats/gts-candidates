@@ -1,0 +1,2207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GeneID GTS Candidate Hub</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',sans-serif;background:#f7fafa;min-height:100vh}
+  button{font-family:'Segoe UI',sans-serif;cursor:pointer}
+  a{font-family:'Segoe UI',sans-serif}
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:#f0f4f3}
+  ::-webkit-scrollbar-thumb{background:#0a7c6e55;border-radius:3px}
+  table{border-collapse:collapse;width:100%}
+  pre{white-space:pre-wrap;font-family:'Segoe UI',sans-serif}
+  /* ── Mobile responsiveness ── */
+  @media (max-width:680px){
+    /* collapse hardcoded two-column grids to a single column */
+    [style*="1fr 1fr"]{grid-template-columns:1fr !important;}
+    /* trim oversized section paddings so content isn't squeezed */
+    [style*="32px 20px"]{padding:22px 15px !important;}
+    [style*="40px 44px"]{padding:26px 20px !important;}
+    [style*="34px 38px"]{padding:24px 20px !important;}
+    [style*="28px 34px"]{padding:22px 20px !important;}
+    [style*="20px 26px"]{padding:18px 16px !important;}
+    [style*="22px 28px"]{padding:18px 18px !important;}
+    [style*="20px 24px"]{padding:16px 16px !important;}
+    [style*="18px 22px"]{padding:15px 16px !important;}
+    /* cap large hero headings */
+    h1{font-size:25px !important;line-height:1.2 !important;}
+    h2{font-size:20px !important;}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const {
+  useState,
+  useEffect
+} = React;
+function useIsMobile(bp) {
+  const q = bp || 760;
+  const [m, setM] = useState(typeof window !== "undefined" && window.innerWidth <= q);
+  useEffect(() => {
+    const on = () => setM(window.innerWidth <= q);
+    on();
+    window.addEventListener("resize", on);
+    return () => window.removeEventListener("resize", on);
+  }, [q]);
+  return m;
+}
+const TEAL = "#0a7c6e",
+  TEAL_DARK = "#065a50",
+  TEAL_LIGHT = "#e6f4f1",
+  TEAL_MID = "#14a896",
+  NAVY = "#0d2b3e",
+  GOLD = "#f0a500",
+  WHITE = "#ffffff",
+  LG = "#f7fafa",
+  purple = "#5a3e8e",
+  pink = "#b5436a",
+  green = "#2d7a4f",
+  orange = "#c05000";
+const tabs = [{
+  id: "about",
+  label: "About the Role",
+  icon: "🎯"
+}, {
+  id: "process",
+  label: "Interview Process",
+  icon: "📋"
+}, {
+  id: "tests",
+  label: "The Tests",
+  icon: "🧬"
+}, {
+  id: "qualify",
+  label: "Who Qualifies",
+  icon: "🩺"
+}, {
+  id: "conversation",
+  label: "Patient Conversation",
+  icon: "💬"
+}, {
+  id: "day",
+  label: "A Day as a GTS",
+  icon: "🔄"
+}, {
+  id: "goodtest",
+  label: "The Good-Test Standard",
+  icon: "✅"
+}, {
+  id: "objections",
+  label: "Patient Objections",
+  icon: "🛡️"
+}, {
+  id: "kpis",
+  label: "Expectations",
+  icon: "📊"
+}, {
+  id: "compliance",
+  label: "Compliance",
+  icon: "⚖️"
+}, {
+  id: "whygeneid",
+  label: "Why GeneID",
+  icon: "⭐"
+}, {
+  id: "numbers",
+  label: "Know Your Numbers",
+  icon: "🎓"
+}];
+const tests = [{
+  name: "PrevenTest™",
+  subtitle: "Hereditary Cancer Risk",
+  color: purple,
+  icon: "🎗️",
+  who: "Patients with a personal or family history of breast, ovarian, pancreatic, colorectal, endometrial, prostate, or stomach cancer, or melanoma — or a known BRCA / Lynch mutation in the family.",
+  what: "Screens 36+ genes for inherited mutations linked to 8 types of solid-tumor cancer.",
+  why: "Up to 10% of cancers are hereditary, yet fewer than 20% of eligible patients are ever tested. A positive result isn't a cancer diagnosis — it means the patient and provider can act early with enhanced screening and prevention.",
+  stats: ["36+ genes screened", "Up to 10% of cancers are hereditary", "1 in 279 carry a BRCA mutation", "Self-pay: $999"],
+  key: "A positive result lets a patient act early. For BRCA carriers, preventive steps can reduce breast cancer risk by up to 95% and ovarian by up to 90% — and it flags risk for their whole family.",
+  next: "Genetic counseling, coordinated by GeneID, plus enhanced screening and strong encouragement to have relatives tested."
+}, {
+  name: "NewbornGeneID™",
+  subtitle: "Carrier Screening",
+  color: pink,
+  icon: "👶",
+  who: "Any patient of reproductive age planning a family now or in the future — Female 18–50, Male 18–55 — or currently pregnant.",
+  what: "A simple mouth-rinse test that screens for 62+ recessive conditions, including cystic fibrosis, sickle cell, SMA, and Tay-Sachs.",
+  why: "Up to 1 in 4 people are carriers, and about 80% of recessive diseases occur in families with no known history. ACOG and ACMG recommend carrier screening for ALL reproductive-age patients.",
+  stats: ["62+ recessive conditions screened", "1 in 4 are silent carriers", "80% have no family history", "Self-pay: $249"],
+  key: "1 in 4 patients are carriers and have no idea. The test helps them avoid unknowingly passing a serious disease to their children — and most insurers cover it for reproductive-age patients.",
+  next: "If positive: partner testing is recommended, plus referral to genetic counseling and a discussion of reproductive options."
+}, {
+  name: "Pharmacogenomics™",
+  subtitle: "PGx — Medication Optimization",
+  color: green,
+  icon: "💊",
+  who: "Patients on chronic or multiple medications, those experiencing side effects or poor response, or anyone starting a new medication who takes a qualifying drug and has a related diagnosis.",
+  what: "Shows how a patient's genes affect the way they metabolize medications. Results cover 200+ medications across cardiovascular, psych, pain/neuro, and more.",
+  why: "Most people metabolize at least some drugs differently than 'normal,' which can mean side effects or reduced effectiveness. PGx helps providers choose the safest, most effective drug and dose.",
+  stats: ["Covers 200+ medications", "FDA & CPIC guided", "Reports are lifelong", "Self-pay: $300"],
+  key: "PGx gives a lifelong report. Whenever a new medication is needed, the provider already knows which options are safest and most effective for that patient's body.",
+  next: "Providers may adjust the dose, switch medication, or monitor more closely. Medicare patients receive an automatic pharmacist referral."
+}, {
+  name: "Envisage GeneID™",
+  subtitle: "NIPT — Prenatal Screening",
+  color: GOLD,
+  icon: "🤰",
+  who: "All pregnant patients from 10 weeks — ACOG recommends NIPT be offered to every pregnant patient regardless of age or baseline risk.",
+  what: "A non-invasive prenatal blood test that screens for common chromosomal conditions (trisomies 13, 18, 21) and can determine the baby's sex.",
+  why: "ACOG, SMFM, and ISPD recommend cfDNA screening as a primary test offered to all pregnant women — it's safe, early, and reliable.",
+  stats: ["Results in 3–7 days", "From 10 weeks gestation", "Single blood draw", "Self-pay: $300"],
+  key: "One simple blood draw gives expecting parents early, reliable information — and reduces the need for invasive testing. We verify insurance before running anything.",
+  next: "Low-risk results are reassuring; high-risk results are not a diagnosis and are followed with confirmatory testing and counseling."
+}, {
+  name: "Xenome™",
+  subtitle: "Whole Exome Sequencing",
+  color: orange,
+  icon: "🔬",
+  who: "Pediatric patients with autism or epilepsy.",
+  what: "Analyzes all ~20,000 protein-coding genes. Available as solo, duo, or trio analysis.",
+  why: "For children with autism or epilepsy, a genetic diagnosis can guide treatment, prognosis, and family planning. Trio analysis (patient + both parents) increases diagnostic yield by 15–20%.",
+  stats: ["~20,000 genes analyzed", "Trio boosts yield 15–20%", "ACMG-supported", "Focus: pediatric autism & epilepsy"],
+  key: "For children with autism or epilepsy, Xenome can provide answers that guide the treatment path forward — in a single test.",
+  next: "Results guide diagnosis and management; genetic counseling is coordinated for significant findings."
+}];
+const objections = [{
+  q: '"How does this help my family?"',
+  tag: "PrevenTest",
+  a: "If you carry a mutation, your family members — especially your children — may be at risk too. Your results can help protect them through earlier screenings and preventive care."
+}, {
+  q: '"Is this really necessary?"',
+  tag: "PrevenTest",
+  a: "More than half of cancer deaths can be prevented, and understanding your genetic risk is one way to help. It lets your doctor create a personalized plan to reduce your risk or catch cancer earlier, when it's most treatable."
+}, {
+  q: '"Why hasn\'t my doctor offered this before?"',
+  tag: "PrevenTest",
+  a: "Genetic testing is still underutilized — even though it's important enough that insurance is required to cover it, usually with no out-of-pocket cost. Your provider partnered with us to help close that gap."
+}, {
+  q: '"I don\'t have a family history of genetic conditions."',
+  tag: "Carrier",
+  a: "That's exactly why carrier screening matters. About 80% of recessive diseases occur in families with no known history. Often there are no signs — the only way to know is through testing."
+}, {
+  q: '"Why should I do this if I feel fine?"',
+  tag: "Carrier",
+  a: "Carrier status doesn't affect your health, but it tells you whether you could pass a serious condition to your children. It's peace of mind and a chance to plan ahead for your family."
+}, {
+  q: '"Isn\'t this only for certain ethnic groups?"',
+  tag: "Carrier",
+  a: "While some conditions are more common in certain groups, carrier screening is recommended for everyone. Many serious conditions can affect people of any background."
+}, {
+  q: '"I\'m not on a lot of medications, why would I do this?"',
+  tag: "PGx",
+  a: "That actually makes this the perfect time. PGx gives a lifelong report — so whenever a new medication is needed, your doctor already knows which options are safest and most effective for your body."
+}, {
+  q: '"Can\'t my doctor figure this out without genetic testing?"',
+  tag: "PGx",
+  a: "Your doctor uses every tool available to personalize your care. PGx adds an extra layer — it reveals how your body is genetically wired to respond to medications, which can't be seen from symptoms or labs alone."
+}, {
+  q: '"What if this costs me money?"',
+  tag: "All Tests",
+  a: "We always verify your insurance before running the test, and most patients have no out-of-pocket cost. If there's ever an issue, we contact you first — no surprise bills."
+}, {
+  q: '"What about privacy or discrimination?"',
+  tag: "All Tests",
+  a: "Your privacy is protected by federal law. The Genetic Information Nondiscrimination Act (GINA) makes it illegal for health insurers or employers to discriminate based on your genetic information."
+}, {
+  q: '"I already did 23andMe / Ancestry."',
+  tag: "All Tests",
+  a: "Those are great for ancestry, but they don't meet medical standards for cancer-risk or carrier screening. Our test is a clinical-grade analysis of the key genes that impact your care."
+}];
+const dayer = [{
+  n: "1",
+  title: "Get the Schedule",
+  color: TEAL,
+  items: ["Obtain a copy of the office schedule each morning", "Identify patients with your in-network insurances", "Prepare a list of screenable patients before clinic starts — arriving early is okay"]
+}, {
+  n: "2",
+  title: "Set Up Your Home Base",
+  color: GOLD,
+  items: ["Introduce yourself to staff (MAs & office manager) and build the relationship", "Set up a spot where you can see patients arrive and get called back for vitals", "Keep your DNA collection kits organized and stocked"]
+}, {
+  n: "3",
+  title: "Screen the Patient",
+  color: "#2980b9",
+  items: ["After vitals are done and the patient is in the exam room, introduce yourself", "Explain you work with the doctor doing preventative genetic testing — follow the script!", "Use GetGeneID medical criteria screening to determine medical necessity"]
+}, {
+  n: "4",
+  title: "Collect the Sample",
+  color: purple,
+  items: ["Wear gloves; offer hand sanitizer before and after consent", "30-second Scope® mouthwash swish — no blood draw (≥10ml in the tube)", "Label each tube: name, DOB, collection date, test type"]
+}, {
+  n: "5",
+  title: "Document",
+  color: TEAL_DARK,
+  items: ["Ensure the requisition is filled out and digitally signed by the provider", "Confirm consent is e-signed and dated, and insurance is captured", "Ask staff to add the recommended language to the chart that genetic testing was ordered"]
+}, {
+  n: "6",
+  title: "Ship & Log",
+  color: "#c0392b",
+  items: ["Print labels (Dymo), bag samples in biohazard bags, ship via UPS Lab Pak", "Update case managers on any medical-record or signature delays", "Update the Daily Test Log every day"]
+}];
+const goodTest = ["Comes from an in-network insurance", "Meets medical necessity (cancer history, or reproductive age and able to have children)", "Requisition filled out, signed by the doctor/NP/PA, with the correct diagnosis codes", "Consent form electronically signed and dated", "Insurance card (front & back) captured, or demographic sheet attached in GetGeneID", "Medical notes stating genetic testing was ordered uploaded into GetGeneID", "Sample labeled with patient name, DOB, and collection date — all matching exactly"];
+const expectations = ["Align your hours with the official office schedule", "Never conduct screenings without a provider present", "Wear scrubs daily to maintain a professional appearance", "Sign in and out of BambooHR daily for accurate attendance", "Screen all potential patients thoroughly", "Complete every section of the Excel Test Log daily", "Keep case managers informed promptly about any delays", "Use 'Reply all' on emails to keep communication clear", "Return test corrections within 48 hours", "Submit as many good tests as possible that meet national guidelines and insurance criteria"];
+const complianceItems = [{
+  icon: "⚖️",
+  title: "Full Regulatory Compliance",
+  desc: "GeneID complies with all federal, state, and local healthcare laws, including Anti-Kickback, Stark, and HIPAA. There is a zero-tolerance policy for violations."
+}, {
+  icon: "🚫",
+  title: "No Incentives, Ever",
+  desc: "We do not offer payments or incentives to physicians, office staff, or patients. Never alter or falsify patient information to qualify someone — the OIG actively monitors for fraud."
+}, {
+  icon: "✅",
+  title: "Verification-First",
+  desc: "Only tests that meet medical necessity and are approved by insurance are run. We never run a test without approval or patient consent."
+}, {
+  icon: "🔒",
+  title: "Protect PHI",
+  desc: "Communicate about patients digitally using initials + DOB or a Patient ID — never full names. No PHI from personal devices. All PHI is sent via Virtru encrypted email."
+}, {
+  icon: "🩺",
+  title: "Stay in Your Lane",
+  desc: "As a GTS, your role is to conduct testing. You never personally deliver lab results or discuss results with the patient — that's the provider's role."
+}, {
+  icon: "🛡️",
+  title: "GINA Protection",
+  desc: "The Genetic Information Nondiscrimination Act makes it illegal for health insurers or employers to use genetic results against a patient. This is a key reassurance for patients."
+}];
+const whyPoints = [{
+  icon: "🔬",
+  title: "Gold-Standard Lab",
+  desc: "CLIA-certified, CAP-accredited, CMS-recognized molecular lab specializing in Next Generation Sequencing."
+}, {
+  icon: "👨‍⚕️",
+  title: "World-Class Science",
+  desc: "Scientific Director Dr. Daniel Cohen is double board-certified in OB/GYN and Genetics, with post-doctoral training at Johns Hopkins."
+}, {
+  icon: "🎯",
+  title: "Real Autonomy",
+  desc: "You own the screening process inside your practice — you're a trusted part of the care team, not a typical MA."
+}, {
+  icon: "🤝",
+  title: "Full Support",
+  desc: "Field-based, but never alone: on-site training plus full support from your manager and directly from the lab."
+}, {
+  icon: "🧪",
+  title: "30-Second Collection",
+  desc: "Most testing is a simple Scope® mouthwash rinse — no blood draw, no pain, no lab visit for the patient."
+}, {
+  icon: "💻",
+  title: "Smart Screening Tools",
+  desc: "GetGeneID has NCCN, ACOG, and FDA/CPIC criteria built in, so eligibility isn't guesswork."
+}, {
+  icon: "❤️",
+  title: "Meaningful Impact",
+  desc: "Every good test can change a patient's life — and their family's — by catching risk early."
+}, {
+  icon: "🧬",
+  title: "Full Test Menu",
+  desc: "Hereditary cancer, carrier screening, PGx, NIPT, and whole exome — one program for the whole practice."
+}];
+const numbers = [{
+  q: "How many people are carriers of an inherited genetic disease?",
+  a: "Up to 1 in 4 (25%)."
+}, {
+  q: "What % of recessive diseases occur in families with NO known family history?",
+  a: "About 80%."
+}, {
+  q: "What share of cancers are hereditary?",
+  a: "Up to 10% — yet fewer than 20% of eligible patients are tested."
+}, {
+  q: "How many people carry a BRCA1 or BRCA2 mutation?",
+  a: "About 1 in 279 — most are unaware."
+}, {
+  q: "How much can preventive steps reduce risk for a BRCA carrier?",
+  a: "Up to 95% for breast cancer and up to 90% for ovarian cancer."
+}, {
+  q: "What is the lifetime colorectal cancer risk with Lynch syndrome?",
+  a: "Up to 80%."
+}, {
+  q: "How early can the Envisage NIPT be done?",
+  a: "As early as 10 weeks of pregnancy."
+}, {
+  q: "How long is the collection for most GeneID tests?",
+  a: "A 30-second Scope® mouthwash rinse — no blood draw."
+}];
+
+// ── COMPONENTS ──
+
+function AboutRole() {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 860,
+      margin: "0 auto",
+      padding: "32px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: `linear-gradient(135deg,${NAVY} 0%,${TEAL_DARK} 100%)`,
+      borderRadius: 16,
+      padding: "40px 44px",
+      marginBottom: 28
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 700,
+      letterSpacing: 3,
+      color: GOLD,
+      textTransform: "uppercase",
+      marginBottom: 10
+    }
+  }, "Now Hiring"), /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontSize: 36,
+      fontWeight: 900,
+      color: WHITE,
+      margin: "0 0 14px",
+      lineHeight: 1.15
+    }
+  }, "Genetic Testing", /*#__PURE__*/React.createElement("br", null), "Specialist (GTS)"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "rgba(255,255,255,0.75)",
+      fontSize: 15,
+      maxWidth: 520,
+      lineHeight: 1.7,
+      margin: "0 0 24px"
+    }
+  }, "Patient-facing. Detail-driven. Built for people who love healthcare and want real autonomy."), /*#__PURE__*/React.createElement("a", {
+    href: "mailto:careers@geneidlab.com",
+    style: {
+      display: "inline-block",
+      background: GOLD,
+      color: NAVY,
+      fontWeight: 800,
+      fontSize: 14,
+      padding: "11px 24px",
+      borderRadius: 10,
+      textDecoration: "none"
+    }
+  }, "Apply Now \u2192 careers@geneidlab.com")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff8e0",
+      border: `2px solid ${GOLD}`,
+      borderRadius: 14,
+      padding: "22px 28px",
+      marginBottom: 22
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 800,
+      color: NAVY,
+      fontSize: 17,
+      marginBottom: 12
+    }
+  }, "\uD83C\uDFAF What the Role Is"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 14,
+      color: "#3a3a2a",
+      lineHeight: 1.8,
+      marginBottom: 10
+    }
+  }, "As a Genetic Testing Specialist, you're embedded inside a physician's office as a trusted part of the care team. You work in the gap that already exists between the MA and the provider visit \u2014 screening patients with GetGeneID medical criteria screening to determine whether they meet medical necessity, collecting a simple mouthwash sample, and making sure everything is documented correctly."), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 14,
+      color: "#3a3a2a",
+      lineHeight: 1.8
+    }
+  }, "This is ", /*#__PURE__*/React.createElement("strong", null, "not a typical MA role"), ". You have real ownership of the screening process, and you're the face of GeneID in that office. It's a field-based position \u2014 but you're never alone, with on-site training plus full support from your manager and the lab.")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 14,
+      marginBottom: 22
+    }
+  }, [{
+    icon: "❤️",
+    title: "Patient-Facing Impact",
+    desc: "Every good test can catch hereditary risk early and change a patient's — and their family's — future."
+  }, {
+    icon: "🎯",
+    title: "Real Autonomy",
+    desc: "You own the screening process inside your practice and drive your own day."
+  }, {
+    icon: "📋",
+    title: "Detail & Documentation",
+    desc: "Accuracy matters: clean requisitions, consents, and samples make a 'good test.'"
+  }, {
+    icon: "🤝",
+    title: "Full Support",
+    desc: "On-site training, GetGeneID medical criteria screening, a Dymo label printer, DNA kits, and a manager + lab behind you."
+  }].map((c, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      background: WHITE,
+      borderRadius: 12,
+      padding: "18px 20px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+      borderLeft: `5px solid ${TEAL}`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 26,
+      marginBottom: 8
+    }
+  }, c.icon), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 800,
+      color: NAVY,
+      fontSize: 14,
+      marginBottom: 5
+    }
+  }, c.title), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "#4a6a6a",
+      lineHeight: 1.6
+    }
+  }, c.desc)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: WHITE,
+      borderRadius: 12,
+      padding: "20px 24px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+      marginBottom: 22
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 800,
+      color: NAVY,
+      fontSize: 15,
+      marginBottom: 14
+    }
+  }, "Role at a Glance"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))",
+      gap: 10,
+      marginBottom: 16
+    }
+  }, [["In-Office", "Embedded in the practice"], ["30-sec", "Mouthwash collection"], ["GetGeneID", "Medical-criteria screening"], ["Remote", "With full support"], ["Paid Training", "On-site & ongoing"]].map(([v, l]) => /*#__PURE__*/React.createElement("div", {
+    key: l,
+    style: {
+      background: TEAL_LIGHT,
+      borderRadius: 10,
+      padding: "12px 14px",
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 900,
+      color: TEAL_DARK,
+      fontSize: 18
+    }
+  }, v), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      color: "#444",
+      marginTop: 2
+    }
+  }, l)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#f8f9fa",
+      borderRadius: 10,
+      padding: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: TEAL_DARK,
+      fontSize: 12,
+      marginBottom: 6
+    }
+  }, "\uD83E\uDDF0 TOOLS PROVIDED"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#444",
+      lineHeight: 1.7
+    }
+  }, "GetGeneID medical criteria screening \xB7 Dymo label printer \xB7 DNA collection kits \xB7 patient education materials \xB7 on-site training")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#f8f9fa",
+      borderRadius: 10,
+      padding: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: TEAL_DARK,
+      fontSize: 12,
+      marginBottom: 6
+    }
+  }, "\uD83C\uDFE5 BENEFITS"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#444",
+      lineHeight: 1.7
+    }
+  }, "Medical \xB7 dental \xB7 vision \xB7 life insurance \xB7 401(k) \xB7 paid training")))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: NAVY,
+      borderRadius: 12,
+      padding: "22px 28px",
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: GOLD,
+      fontWeight: 800,
+      fontSize: 16,
+      marginBottom: 6
+    }
+  }, "Ready to Apply?"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: "rgba(255,255,255,0.75)",
+      fontSize: 13,
+      marginBottom: 14
+    }
+  }, "Send your resume and a brief note on your background."), /*#__PURE__*/React.createElement("a", {
+    href: "mailto:careers@geneidlab.com",
+    style: {
+      display: "inline-block",
+      background: GOLD,
+      color: NAVY,
+      fontWeight: 800,
+      fontSize: 14,
+      padding: "10px 24px",
+      borderRadius: 10,
+      textDecoration: "none"
+    }
+  }, "careers@geneidlab.com"), /*#__PURE__*/React.createElement("a", {
+    href: "https://app.hellosign.com/s/CWmexikX",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    style: {
+      display: "inline-block",
+      background: TEAL_MID,
+      color: NAVY,
+      fontWeight: 800,
+      fontSize: 14,
+      padding: "10px 24px",
+      borderRadius: 10,
+      textDecoration: "none",
+      marginLeft: 10
+    }
+  }, "Employee Application →")));
+}
+function InterviewProcess() {
+  const [open, setOpen] = useState(0);
+  const steps = [{
+    n: "1",
+    label: "Recruiting Call",
+    color: TEAL,
+    desc: "An initial conversation with a member of the recruiting team.",
+    prep: ["Know your healthcare or patient-facing background", "Understand GeneID and the GTS role at a high level", "Have a clear answer for why this role interests you", "Come with questions — this is a two-way conversation"]
+  }, {
+    n: "2",
+    label: "Interview with the Area Manager (Teams)",
+    color: purple,
+    desc: "A Teams interview coordinated by your recruiter.",
+    prep: ["Be ready to talk through how you'd handle a busy clinic day", "Show comfort talking to patients and building rapport with office staff", "Review The Tests and Patient Conversation tabs before this call", "Demonstrate attention to detail — accuracy is central to the role"]
+  }, {
+    n: "3",
+    label: "On-Site Visit with the Sales Account Manager",
+    color: orange,
+    desc: "The final stage: meet the Sales Account Manager at the physician's office to meet the providers and staff.",
+    prep: ["Dress professionally (scrubs are worn day-to-day in the role)", "Be warm and personable — you'll be meeting the practice's team", "Ask about the office's workflow and patient flow", "Show that you'll be a confident, value-adding part of their team"]
+  }];
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 860,
+      margin: "0 auto",
+      padding: "32px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: `linear-gradient(135deg,${NAVY} 0%,#1a3a50 100%)`,
+      borderRadius: 14,
+      padding: "28px 34px",
+      marginBottom: 24
+    }
+  }, /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontSize: 28,
+      fontWeight: 900,
+      color: WHITE,
+      margin: "0 0 6px"
+    }
+  }, "Interview Process"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "rgba(255,255,255,0.7)",
+      fontSize: 13,
+      margin: 0
+    }
+  }, "Three stages. Use this hub to prepare \u2014 everything you need is here.")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff8e0",
+      border: `2px solid ${GOLD}`,
+      borderRadius: 12,
+      padding: "14px 20px",
+      marginBottom: 22
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: "#7a5500",
+      fontSize: 13
+    }
+  }, "\uD83D\uDCA1 Candidate Tip"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "#5a4000",
+      marginTop: 4,
+      lineHeight: 1.7
+    }
+  }, "Use every section of this hub to prepare \u2014 especially The Tests, Who Qualifies, Patient Conversation, and Know Your Numbers. Showing you've done your homework is exactly what GeneID values in a GTS.")), steps.map((step, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      background: WHITE,
+      borderRadius: 12,
+      marginBottom: 12,
+      overflow: "hidden",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.07)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    onClick: () => setOpen(open === i ? null : i),
+    style: {
+      padding: "16px 20px",
+      borderLeft: `6px solid ${step.color}`,
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      gap: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 38,
+      height: 38,
+      borderRadius: "50%",
+      background: step.color,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: WHITE,
+      fontWeight: 900,
+      fontSize: 16
+    }
+  }, step.n)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 800,
+      color: NAVY,
+      fontSize: 14
+    }
+  }, step.label), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#7a9a9a",
+      marginTop: 2
+    }
+  }, step.desc)), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: step.color,
+      fontSize: 16
+    }
+  }, open === i ? "▲" : "▼")), open === i && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "14px 20px 18px",
+      borderTop: "1px solid #f0f4f3"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: NAVY,
+      fontSize: 12,
+      marginBottom: 8,
+      textTransform: "uppercase",
+      letterSpacing: 1
+    }
+  }, "How to Prepare"), step.prep.map((pt, j) => /*#__PURE__*/React.createElement("div", {
+    key: j,
+    style: {
+      display: "flex",
+      gap: 8,
+      marginBottom: 8,
+      fontSize: 13,
+      color: "#2c4040",
+      alignItems: "flex-start"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: step.color,
+      fontWeight: 700,
+      flexShrink: 0
+    }
+  }, "\u2192"), pt))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: NAVY,
+      borderRadius: 12,
+      padding: "20px 26px",
+      textAlign: "center",
+      marginTop: 8
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: GOLD,
+      fontWeight: 800,
+      fontSize: 15,
+      marginBottom: 6
+    }
+  }, "Ready to get started?"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: "rgba(255,255,255,0.7)",
+      fontSize: 13,
+      marginBottom: 12
+    }
+  }, "Send your resume and a brief note on your background:"), /*#__PURE__*/React.createElement("a", {
+    href: "mailto:careers@geneidlab.com",
+    style: {
+      display: "inline-block",
+      background: GOLD,
+      color: NAVY,
+      fontWeight: 800,
+      fontSize: 13,
+      padding: "10px 22px",
+      borderRadius: 10,
+      textDecoration: "none"
+    }
+  }, "careers@geneidlab.com"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: "rgba(255,255,255,0.55)",
+      fontSize: 12,
+      margin: "16px 0 10px"
+    }
+  }, "Moving forward in the process? Complete your application:"), /*#__PURE__*/React.createElement("a", {
+    href: "https://app.hellosign.com/s/CWmexikX",
+    target: "_blank",
+    rel: "noopener noreferrer",
+    style: {
+      display: "inline-block",
+      background: TEAL_MID,
+      color: NAVY,
+      fontWeight: 800,
+      fontSize: 13,
+      padding: "10px 22px",
+      borderRadius: 10,
+      textDecoration: "none"
+    }
+  }, "Complete the Employee Application →")));
+}
+function Tests() {
+  const [expanded, setExpanded] = useState(0);
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 860,
+      margin: "0 auto",
+      padding: "32px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      color: NAVY,
+      marginBottom: 4
+    }
+  }, "The 5 GeneID Tests"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "#5a7a7a",
+      fontSize: 13,
+      marginBottom: 18
+    }
+  }, "For each test, know four things: what it does, who qualifies, the benefits, and the next steps. You'll be expected to speak to these."), tests.map((p, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      background: WHITE,
+      borderRadius: 12,
+      marginBottom: 12,
+      overflow: "hidden",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.07)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    onClick: () => setExpanded(expanded === i ? null : i),
+    style: {
+      padding: "14px 18px",
+      borderLeft: `6px solid ${p.color}`,
+      cursor: "pointer",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center"
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 20
+    }
+  }, p.icon), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontWeight: 800,
+      fontSize: 15,
+      color: p.color,
+      marginLeft: 10
+    }
+  }, p.name), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "#777",
+      fontSize: 12,
+      marginLeft: 8
+    }
+  }, p.subtitle)), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: p.color,
+      fontSize: 16
+    }
+  }, expanded === i ? "▲" : "▼")), expanded === i && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "0 18px 18px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 10,
+      marginTop: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#f8f9fa",
+      borderRadius: 8,
+      padding: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: p.color,
+      marginBottom: 5,
+      fontSize: 12
+    }
+  }, "\uD83E\uDE7A WHO QUALIFIES"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#444",
+      lineHeight: 1.5
+    }
+  }, p.who)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#f8f9fa",
+      borderRadius: 8,
+      padding: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: p.color,
+      marginBottom: 5,
+      fontSize: 12
+    }
+  }, "\uD83D\uDD2C WHAT IT DOES"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#444",
+      lineHeight: 1.5
+    }
+  }, p.what))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#f8f9fa",
+      borderRadius: 8,
+      padding: 12,
+      marginTop: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: p.color,
+      marginBottom: 4,
+      fontSize: 12
+    }
+  }, "\uD83D\uDCA1 WHY IT MATTERS"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#444",
+      lineHeight: 1.5
+    }
+  }, p.why)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#f8f9fa",
+      borderRadius: 8,
+      padding: 12,
+      marginTop: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: p.color,
+      marginBottom: 4,
+      fontSize: 12
+    }
+  }, "\u27A1\uFE0F NEXT STEPS FOR THE PATIENT"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#444",
+      lineHeight: 1.5
+    }
+  }, p.next)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexWrap: "wrap",
+      gap: 6,
+      marginTop: 10
+    }
+  }, p.stats.map((s, j) => /*#__PURE__*/React.createElement("span", {
+    key: j,
+    style: {
+      background: TEAL_LIGHT,
+      color: TEAL_DARK,
+      fontSize: 11,
+      fontWeight: 600,
+      padding: "4px 10px",
+      borderRadius: 6
+    }
+  }, "\u2022 ", s))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 12,
+      background: "#fffbf0",
+      border: `1px solid ${GOLD}`,
+      borderRadius: 10,
+      padding: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: GOLD,
+      marginBottom: 6,
+      fontSize: 12
+    }
+  }, "\uD83C\uDFAF KEY MESSAGE FOR PATIENTS"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#444",
+      lineHeight: 1.6,
+      fontStyle: "italic"
+    }
+  }, "\"", p.key, "\""))))));
+}
+function WhoQualifies() {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 860,
+      margin: "0 auto",
+      padding: "32px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      color: NAVY,
+      marginBottom: 4
+    }
+  }, "Who Qualifies \u2014 Medical Necessity"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "#5a7a7a",
+      fontSize: 13,
+      marginBottom: 18
+    }
+  }, "Determining medical necessity is the heart of the GTS role. Here's the framework \u2014 GetGeneID walks you through the specifics for each patient."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: `linear-gradient(135deg,${NAVY} 0%,${TEAL_DARK} 100%)`,
+      borderRadius: 14,
+      padding: "20px 26px",
+      marginBottom: 18
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: GOLD,
+      fontWeight: 800,
+      fontSize: 14,
+      marginBottom: 10
+    }
+  }, "The Ground Rules"), ["The test must be ordered by the patient's own treating physician or HCP (MD, DO, PA, or NP)", "A doctor cannot order a test for themselves — they must be referred by another doctor", "Patients must be 18 or older for insurance to approve coverage", "In all states except Texas, only PPO patients can be tested"].map((r, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: "flex",
+      gap: 8,
+      marginBottom: 7,
+      fontSize: 13,
+      color: "rgba(255,255,255,0.9)"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: GOLD
+    }
+  }, "\u2713"), r))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 12,
+      marginBottom: 18
+    }
+  }, [{
+    t: "PrevenTest (Cancer Risk)",
+    c: purple,
+    d: "Personal or family history of qualifying cancers that meets NCCN or Carelon criteria (see below)."
+  }, {
+    t: "NewbornGeneID (Carrier)",
+    c: pink,
+    d: "Reproductive age and able to have children — Female 18–50, Male 18–55 — planning a family now or later."
+  }, {
+    t: "Pharmacogenomics (PGx)",
+    c: green,
+    d: "Takes a qualifying medication AND has a related diagnosis (e.g. cardiovascular, psych, pain)."
+  }, {
+    t: "Envisage (NIPT)",
+    c: GOLD,
+    d: "Currently pregnant, from 10 weeks gestation. ACOG recommends it be offered to all pregnant patients."
+  }].map(x => /*#__PURE__*/React.createElement("div", {
+    key: x.t,
+    style: {
+      background: WHITE,
+      borderRadius: 12,
+      padding: 16,
+      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+      borderTop: `4px solid ${x.c}`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 800,
+      color: x.c,
+      fontSize: 13,
+      marginBottom: 6
+    }
+  }, x.t), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#3a5a5a",
+      lineHeight: 1.6
+    }
+  }, x.d)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: WHITE,
+      borderRadius: 12,
+      padding: "18px 22px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 800,
+      color: NAVY,
+      fontSize: 14,
+      marginBottom: 10
+    }
+  }, "Cancer Risk: Two Insurance Criteria"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#f8f9fa",
+      borderRadius: 10,
+      padding: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: NAVY,
+      fontSize: 13,
+      marginBottom: 5
+    }
+  }, "NCCN"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#444",
+      lineHeight: 1.6
+    }
+  }, "National Comprehensive Cancer Network. Used by most insurances, Medicare, and Medicaids. Generally driven by ", /*#__PURE__*/React.createElement("strong", null, "family"), " history of qualifying cancers.")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#f8f9fa",
+      borderRadius: 10,
+      padding: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: NAVY,
+      fontSize: 13,
+      marginBottom: 5
+    }
+  }, "Carelon"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#444",
+      lineHeight: 1.6
+    }
+  }, "Third-party authorizer for BCBS Texas, Anthem, Premera, Carefirst, Credence, and Wellpoint. Often considers ", /*#__PURE__*/React.createElement("strong", null, "personal"), " history as well.")))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: TEAL_LIGHT,
+      borderRadius: 12,
+      padding: "16px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: TEAL_DARK,
+      fontSize: 13,
+      marginBottom: 8
+    }
+  }, "\uD83D\uDC6A Degrees of Relatives (used in screening)"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "#2c4040",
+      lineHeight: 1.7
+    }
+  }, /*#__PURE__*/React.createElement("strong", null, "1st degree:"), " parents, siblings, children", /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("strong", null, "2nd degree:"), " grandparents, aunts, uncles, nieces, nephews, half-siblings", /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement("strong", null, "3rd degree:"), " great-grandparents, great aunts/uncles, cousins (used in Carelon screening)"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#5a7a7a",
+      marginTop: 8,
+      fontStyle: "italic"
+    }
+  }, "Note: meeting criteria does not guarantee insurance coverage \u2014 GetGeneID and our case managers confirm eligibility.")));
+}
+function PatientConversation() {
+  const [lang, setLang] = useState("en");
+  const [copied, setCopied] = useState(false);
+  const scripts = {
+    en: `Hi, my name is [Your Name], and I work with Dr. [Doctor's Name] helping with genetic testing here in the office. Dr. [Doctor's Name] has asked me to screen patients to see if they may be at risk for certain hereditary conditions, like cancers or inherited diseases that could unknowingly be passed to a child.
+
+We also offer pharmacogenomic testing, which helps determine how your body processes medications based on your unique genetic makeup. This can help your doctor choose the safest and most effective medications for you.
+
+All I need to do is ask a few quick questions about your personal and family medical history to see if you meet medical guidelines for testing. If you do, the test is simple — just a quick 30-second mouthwash rinse with Scope. No blood draw is needed.
+
+Your insurance typically covers the testing, often with no out-of-pocket cost. And just to be clear, we won't run any tests until insurance approval comes through.
+
+Let's go ahead and get started — do you have your insurance card handy?`,
+    es: `Hola, me llamo [Su nombre] y trabajo con el Dr. [Nombre del doctor] en la consulta, donde me encargo de las pruebas genéticas. El Dr. [Nombre del doctor] me ha pedido que evalúe a los pacientes para determinar si corren riesgo de padecer ciertas enfermedades hereditarias, como cáncer o enfermedades que podrían transmitirse a sus hijos sin saberlo.
+
+También ofrecemos pruebas farmacogenómicas, que ayudan a determinar cómo su cuerpo procesa los medicamentos según su composición genética única. Esto puede ayudar a su médico a elegir los medicamentos más seguros y eficaces para usted.
+
+Solo necesito hacerle algunas preguntas rápidas sobre su historial médico personal y familiar para ver si cumple con las pautas médicas. Si es así, la prueba es sencilla: solo un enjuague bucal rápido de 30 segundos con Scope. No se requiere extracción de sangre.
+
+Su seguro generalmente cubre la prueba, a menudo sin costo alguno. Y para que quede claro, no realizaremos ninguna prueba hasta recibir la aprobación del seguro.
+
+¡Comencemos! ¿Tiene su tarjeta del seguro a mano?`
+  };
+  const copy = () => {
+    navigator.clipboard && navigator.clipboard.writeText(scripts[lang]);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  const practices = [["Be friendly and calm", "Speak at a steady, conversational pace. A smile makes your tone more approachable."], ["Keep it simple", "Avoid jargon — say 'hereditary conditions,' 'inherited risks,' and 'how your body processes medications.'"], ["Listen and acknowledge", "If a patient is hesitant, pause: 'I completely understand — it's good to ask questions.'"], ["Stay positive, never pushy", "Focus on how the test gives them information and control over their health."], ["Be clear about costs", "'Your insurance usually covers it. If there's ever a cost, we'll get your approval first.'"], ["Use the doctor's name", "'Dr. [Name] asked me to speak with you' — this builds instant credibility."], ["Close with confidence", "Thank them for their time, even if they don't qualify. If they do, guide them calmly through next steps."]];
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 860,
+      margin: "0 auto",
+      padding: "32px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      color: NAVY,
+      marginBottom: 4
+    }
+  }, "Speaking with the Patient"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "#5a7a7a",
+      fontSize: 13,
+      marginBottom: 18
+    }
+  }, "The screening script and the communication habits that make patients feel comfortable and cared for."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8,
+      marginBottom: 14
+    }
+  }, [["en", "English"], ["es", "Español"]].map(([k, l]) => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    onClick: () => setLang(k),
+    style: {
+      padding: "8px 18px",
+      borderRadius: 10,
+      border: `2px solid ${lang === k ? TEAL : "#d0e8e3"}`,
+      background: lang === k ? TEAL : WHITE,
+      color: lang === k ? WHITE : NAVY,
+      fontWeight: 700,
+      fontSize: 13
+    }
+  }, l))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: WHITE,
+      borderRadius: 12,
+      padding: "20px 24px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+      borderLeft: `5px solid ${TEAL}`,
+      marginBottom: 18
+    }
+  }, /*#__PURE__*/React.createElement("pre", {
+    style: {
+      fontSize: 13,
+      color: "#2c4040",
+      lineHeight: 1.8
+    }
+  }, scripts[lang]), /*#__PURE__*/React.createElement("button", {
+    onClick: copy,
+    style: {
+      marginTop: 12,
+      background: GOLD,
+      color: WHITE,
+      border: "none",
+      borderRadius: 6,
+      padding: "6px 14px",
+      fontSize: 12,
+      fontWeight: 700
+    }
+  }, copied ? "✓ Copied!" : "📋 Copy Script")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: WHITE,
+      borderRadius: 12,
+      padding: "18px 22px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+      marginBottom: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 800,
+      color: NAVY,
+      fontSize: 14,
+      marginBottom: 12
+    }
+  }, "\uD83D\uDCAC Communication Best Practices"), practices.map(([t, d], i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: "flex",
+      gap: 10,
+      marginBottom: 9,
+      padding: "9px 11px",
+      background: i % 2 === 0 ? LG : WHITE,
+      borderRadius: 6
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: TEAL,
+      fontWeight: 700,
+      flexShrink: 0
+    }
+  }, "\u2713"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "#333"
+    }
+  }, /*#__PURE__*/React.createElement("strong", null, t, "."), " ", d)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: TEAL_LIGHT,
+      borderRadius: 12,
+      padding: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: TEAL_DARK,
+      fontSize: 13,
+      marginBottom: 8
+    }
+  }, "Script Essentials"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#2c4040",
+      lineHeight: 1.8
+    }
+  }, "1. Introduce yourself + that you work with the doctor", /*#__PURE__*/React.createElement("br", null), "2. Briefly describe each test", /*#__PURE__*/React.createElement("br", null), "3. No out-of-pocket cost", /*#__PURE__*/React.createElement("br", null), "4. Just a mouthwash test", /*#__PURE__*/React.createElement("br", null), "5. Do you have your insurance card?")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff8e0",
+      borderRadius: 12,
+      padding: 16,
+      border: `1px solid ${GOLD}`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: "#a07000",
+      fontSize: 13,
+      marginBottom: 8
+    }
+  }, "End-of-Script Notes"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#5a4000",
+      lineHeight: 1.8
+    }
+  }, "\u2022 Explain that an EOB is not a bill", /*#__PURE__*/React.createElement("br", null), "\u2022 Results take about 4\u20136 weeks", /*#__PURE__*/React.createElement("br", null), "\u2022 Thank them for their time"))));
+}
+function DayAsGTS() {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 820,
+      margin: "0 auto",
+      padding: "32px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      color: NAVY,
+      marginBottom: 4
+    }
+  }, "A Day as a GTS"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "#5a7a7a",
+      fontSize: 13,
+      marginBottom: 22
+    }
+  }, "From the morning schedule to shipping samples \u2014 here's the screening workflow you'll own."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "absolute",
+      left: 26,
+      top: 0,
+      bottom: 0,
+      width: 3,
+      background: `linear-gradient(to bottom,${TEAL},${TEAL_DARK})`,
+      borderRadius: 4
+    }
+  }), dayer.map((s, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: "flex",
+      gap: 18,
+      marginBottom: 16,
+      position: "relative"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 52,
+      height: 52,
+      borderRadius: "50%",
+      background: s.color,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+      zIndex: 1,
+      border: `3px solid ${WHITE}`,
+      boxShadow: `0 0 0 2px ${s.color}`
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: WHITE,
+      fontWeight: 900,
+      fontSize: 18
+    }
+  }, s.n)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      background: WHITE,
+      borderLeft: `4px solid ${s.color}`,
+      borderRadius: "0 12px 12px 0",
+      padding: "12px 16px",
+      marginTop: 4
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 800,
+      color: NAVY,
+      fontSize: 14,
+      marginBottom: 6
+    }
+  }, s.title), s.items.map((item, j) => /*#__PURE__*/React.createElement("div", {
+    key: j,
+    style: {
+      fontSize: 12,
+      color: "#3a5a5a",
+      display: "flex",
+      gap: 6,
+      marginBottom: 3
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: s.color,
+      flexShrink: 0
+    }
+  }, "\u2192"), item)))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: NAVY,
+      borderRadius: 12,
+      padding: "16px 22px",
+      marginTop: 8
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: GOLD,
+      fontWeight: 700,
+      fontSize: 12,
+      marginBottom: 6
+    }
+  }, "\uD83E\uDD1D Mindset"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: "rgba(255,255,255,0.85)",
+      fontSize: 13,
+      lineHeight: 1.7
+    }
+  }, "Be confident and assertive \u2014 you're there because the provider wants you there. Don't disrupt the office; become a valued part of their team.")));
+}
+function GoodTest() {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 820,
+      margin: "0 auto",
+      padding: "32px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      color: NAVY,
+      marginBottom: 4
+    }
+  }, "The Good-Test Standard"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "#5a7a7a",
+      fontSize: 13,
+      marginBottom: 18
+    }
+  }, "Your goal each day is to submit as many ", /*#__PURE__*/React.createElement("em", null, "good"), " tests as possible. A good test is complete, accurate, and meets criteria."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: WHITE,
+      borderRadius: 12,
+      padding: "20px 24px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+      marginBottom: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 800,
+      color: NAVY,
+      fontSize: 15,
+      marginBottom: 14
+    }
+  }, "\u2705 What Makes a Good Test"), goodTest.map((g, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: "flex",
+      gap: 10,
+      marginBottom: 10,
+      alignItems: "flex-start"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      width: 24,
+      height: 24,
+      borderRadius: "50%",
+      background: green,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: WHITE,
+      fontWeight: 900,
+      fontSize: 12
+    }
+  }, "\u2713")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "#2c4040",
+      lineHeight: 1.6,
+      paddingTop: 2
+    }
+  }, g)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: TEAL_LIGHT,
+      borderRadius: 12,
+      padding: 16
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: TEAL_DARK,
+      fontSize: 13,
+      marginBottom: 8
+    }
+  }, "\uD83E\uDDEA Collection Details"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#2c4040",
+      lineHeight: 1.8
+    }
+  }, "30-second Scope\xAE swish \xB7 \u226510ml in the tube \xB7 gloves worn \xB7 label each tube (name, DOB, date, test type) \xB7 Carrier needs 1 tube; Cancer Risk & PGx need 2 tubes each")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff8e0",
+      borderRadius: 12,
+      padding: 16,
+      border: `1px solid ${GOLD}`
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: "#a07000",
+      fontSize: 13,
+      marginBottom: 8
+    }
+  }, "\uD83D\uDCDD Chart Language"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#5a4000",
+      lineHeight: 1.8
+    }
+  }, "Before the note is closed, make sure the chart reflects that genetic testing was ordered \u2014 using the recommended language for each test type."))));
+}
+function PatientObjections() {
+  const [open, setOpen] = useState(null);
+  const tagColors = {
+    PrevenTest: purple,
+    Carrier: pink,
+    PGx: green,
+    "All Tests": TEAL
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 800,
+      margin: "0 auto",
+      padding: "32px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      color: NAVY,
+      marginBottom: 4
+    }
+  }, "Patient Objection Handler"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "#5a7a7a",
+      fontSize: 13,
+      marginBottom: 14
+    }
+  }, "The most common questions patients ask \u2014 and calm, simple ways to respond. Great prep for your interview."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: TEAL,
+      borderRadius: 10,
+      padding: "12px 18px",
+      marginBottom: 20,
+      display: "flex",
+      gap: 14,
+      flexWrap: "wrap"
+    }
+  }, ["Lead with empathy", "Keep it simple", "Never pushy — give them control"].map(r => /*#__PURE__*/React.createElement("span", {
+    key: r,
+    style: {
+      color: WHITE,
+      fontSize: 13,
+      fontWeight: 600,
+      display: "flex",
+      alignItems: "center",
+      gap: 6
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: GOLD
+    }
+  }, "\u2713"), " ", r))), objections.map((o, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    onClick: () => setOpen(open === i ? null : i),
+    style: {
+      borderRadius: 10,
+      border: `2px solid ${open === i ? TEAL : "#d4e8e4"}`,
+      marginBottom: 9,
+      overflow: "hidden",
+      cursor: "pointer",
+      background: open === i ? TEAL_LIGHT : WHITE
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "12px 16px",
+      display: "flex",
+      alignItems: "center",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      background: tagColors[o.tag] || TEAL,
+      color: WHITE,
+      fontSize: 10,
+      fontWeight: 700,
+      padding: "2px 8px",
+      borderRadius: 16,
+      whiteSpace: "nowrap"
+    }
+  }, o.tag), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: 13,
+      fontWeight: 700,
+      color: NAVY,
+      flex: 1
+    }
+  }, o.q), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: TEAL,
+      fontSize: 14
+    }
+  }, open === i ? "▲" : "▼")), open === i && /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "0 16px 14px",
+      borderTop: "1px solid #c8e2dc"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 10,
+      fontSize: 13,
+      color: "#2c4040",
+      lineHeight: 1.7
+    }
+  }, o.a)))));
+}
+function KPIs() {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 860,
+      margin: "0 auto",
+      padding: "32px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      color: NAVY,
+      marginBottom: 4
+    }
+  }, "Expectations & Daily Standards"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "#5a7a7a",
+      fontSize: 13,
+      marginBottom: 18
+    }
+  }, "What a great GTS does every day. Consistency and accuracy are everything."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: `linear-gradient(135deg,${NAVY} 0%,${TEAL_DARK} 100%)`,
+      borderRadius: 14,
+      padding: "20px 26px",
+      marginBottom: 20
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: GOLD,
+      fontWeight: 800,
+      fontSize: 15,
+      marginBottom: 12
+    }
+  }, "Daily Workday Checklist"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 8
+    }
+  }, expectations.map((e, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      display: "flex",
+      gap: 8,
+      fontSize: 12.5,
+      color: "rgba(255,255,255,0.9)",
+      alignItems: "flex-start"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: GOLD,
+      flexShrink: 0
+    }
+  }, "\u2713"), e)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: WHITE,
+      borderRadius: 12,
+      padding: "18px 22px",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+      marginBottom: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 800,
+      color: NAVY,
+      fontSize: 14,
+      marginBottom: 10
+    }
+  }, "The Daily Test Log"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      fontSize: 13,
+      color: "#3a5a5a",
+      lineHeight: 1.7,
+      marginBottom: 8
+    }
+  }, "The Daily Test Log must be updated every day. It tracks every screened patient \u2014 initials, DOB, age, insurance, in- or out-of-network, screening dates, follow-up reasons, and UPS tracking for shipped samples."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 12,
+      color: "#5a7a7a",
+      fontStyle: "italic"
+    }
+  }, "Keeping case managers updated on delays and replying-all on corrections keeps everything moving.")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: TEAL_LIGHT,
+      borderRadius: 12,
+      padding: "16px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: TEAL_DARK,
+      fontSize: 13,
+      marginBottom: 6
+    }
+  }, "\uD83C\uDFAF The North Star"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "#2c4040",
+      lineHeight: 1.7
+    }
+  }, "While there's no fixed quota, the office must stay viable so GeneID can keep serving its providers and patients. Submit as many good tests as possible that meet national guidelines and insurance criteria \u2014 and flag any screening restrictions to your manager right away.")));
+}
+function Compliance() {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 820,
+      margin: "0 auto",
+      padding: "32px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      color: NAVY,
+      marginBottom: 4
+    }
+  }, "Compliance & Integrity"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "#5a7a7a",
+      fontSize: 13,
+      marginBottom: 18
+    }
+  }, "Doing the work the right way is the foundation of the role. Know these cold."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 12,
+      marginBottom: 16
+    }
+  }, complianceItems.map((p, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      background: WHITE,
+      border: "1px solid #d0e8e3",
+      borderRadius: 12,
+      padding: "16px 18px",
+      display: "flex",
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 24,
+      flexShrink: 0
+    }
+  }, p.icon), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 800,
+      color: NAVY,
+      fontSize: 13,
+      marginBottom: 4
+    }
+  }, p.title), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: "#4a6a6a",
+      fontSize: 12,
+      lineHeight: 1.6
+    }
+  }, p.desc))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: "#fff8e0",
+      border: `1px solid ${GOLD}`,
+      borderRadius: 12,
+      padding: "16px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 700,
+      color: "#a07000",
+      fontSize: 13,
+      marginBottom: 6
+    }
+  }, "\uD83E\uDDEC A note on VUS results"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 13,
+      color: "#5a4000",
+      lineHeight: 1.7
+    }
+  }, "A Variant of Uncertain Significance (VUS) means current evidence can't yet say whether a variant raises risk or is harmless. It is not clinically actionable, and most VUS results are later reclassified as benign. The key patient message: a VUS does not mean they have a cancer-causing mutation \u2014 it simply means more research is needed.")));
+}
+function WhyGeneID() {
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 820,
+      margin: "0 auto",
+      padding: "32px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: `linear-gradient(135deg,${NAVY} 0%,${TEAL_DARK} 100%)`,
+      borderRadius: 16,
+      padding: "34px 38px",
+      marginBottom: 26
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 11,
+      fontWeight: 700,
+      letterSpacing: 3,
+      color: GOLD,
+      textTransform: "uppercase",
+      marginBottom: 8
+    }
+  }, "Candidate Reference"), /*#__PURE__*/React.createElement("h1", {
+    style: {
+      fontSize: 30,
+      fontWeight: 900,
+      color: WHITE,
+      margin: 0
+    }
+  }, "Why GeneID?"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "rgba(255,255,255,0.75)",
+      fontSize: 14,
+      marginTop: 8
+    }
+  }, "What makes this lab \u2014 and this role \u2014 worth your time."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 16,
+      display: "flex",
+      gap: 10,
+      flexWrap: "wrap"
+    }
+  }, ["CLIA Certified", "CAP Accredited", "CMS Laboratory", "Founded 2012"].map(b => /*#__PURE__*/React.createElement("span", {
+    key: b,
+    style: {
+      background: "rgba(255,255,255,0.12)",
+      color: WHITE,
+      fontSize: 11,
+      fontWeight: 700,
+      padding: "5px 12px",
+      borderRadius: 20
+    }
+  }, b)))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 12
+    }
+  }, whyPoints.map((p, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    style: {
+      background: WHITE,
+      border: "1px solid #d0e8e3",
+      borderRadius: 12,
+      padding: "16px 18px",
+      display: "flex",
+      gap: 12
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: 24,
+      flexShrink: 0
+    }
+  }, p.icon), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontWeight: 800,
+      color: NAVY,
+      fontSize: 13,
+      marginBottom: 4
+    }
+  }, p.title), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: "#4a6a6a",
+      fontSize: 12,
+      lineHeight: 1.6
+    }
+  }, p.desc))))));
+}
+function KnowYourNumbers() {
+  const [revealed, setRevealed] = useState({});
+  const toggle = i => setRevealed(r => ({
+    ...r,
+    [i]: !r[i]
+  }));
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      maxWidth: 820,
+      margin: "0 auto",
+      padding: "32px 20px"
+    }
+  }, /*#__PURE__*/React.createElement("h2", {
+    style: {
+      color: NAVY,
+      marginBottom: 4
+    }
+  }, "\uD83C\uDF93 Know Your Numbers"), /*#__PURE__*/React.createElement("p", {
+    style: {
+      color: "#5a7a7a",
+      fontSize: 13,
+      marginBottom: 18
+    }
+  }, "These are the stats that make the case for screening. Tap a card to reveal the answer \u2014 then quiz yourself before your interview."), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 12
+    }
+  }, numbers.map((n, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    onClick: () => toggle(i),
+    style: {
+      background: revealed[i] ? TEAL : WHITE,
+      border: `2px solid ${revealed[i] ? TEAL : "#d4e8e4"}`,
+      borderRadius: 12,
+      padding: "18px 20px",
+      cursor: "pointer",
+      minHeight: 120,
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      transition: "all 0.15s"
+    }
+  }, revealed[i] ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: GOLD,
+      fontSize: 11,
+      fontWeight: 700,
+      textTransform: "uppercase",
+      letterSpacing: 1,
+      marginBottom: 6
+    }
+  }, "Answer"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: WHITE,
+      fontSize: 16,
+      fontWeight: 800,
+      lineHeight: 1.4
+    }
+  }, n.a)) : /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: TEAL,
+      fontSize: 11,
+      fontWeight: 700,
+      textTransform: "uppercase",
+      letterSpacing: 1,
+      marginBottom: 6
+    }
+  }, "Question ", i + 1), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: NAVY,
+      fontSize: 14,
+      fontWeight: 700,
+      lineHeight: 1.45
+    }
+  }, n.q), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: "#9ab",
+      fontSize: 11,
+      marginTop: 10
+    }
+  }, "Tap to reveal \u2192"))))));
+}
+
+// ── MAIN APP ──
+function App() {
+  const [activeTab, setActiveTab] = useState("about");
+  const isMobile = useIsMobile(760);
+  const renderContent = () => {
+    switch (activeTab) {
+      case "about":
+        return /*#__PURE__*/React.createElement(AboutRole, null);
+      case "process":
+        return /*#__PURE__*/React.createElement(InterviewProcess, null);
+      case "tests":
+        return /*#__PURE__*/React.createElement(Tests, null);
+      case "qualify":
+        return /*#__PURE__*/React.createElement(WhoQualifies, null);
+      case "conversation":
+        return /*#__PURE__*/React.createElement(PatientConversation, null);
+      case "day":
+        return /*#__PURE__*/React.createElement(DayAsGTS, null);
+      case "goodtest":
+        return /*#__PURE__*/React.createElement(GoodTest, null);
+      case "objections":
+        return /*#__PURE__*/React.createElement(PatientObjections, null);
+      case "kpis":
+        return /*#__PURE__*/React.createElement(KPIs, null);
+      case "compliance":
+        return /*#__PURE__*/React.createElement(Compliance, null);
+      case "whygeneid":
+        return /*#__PURE__*/React.createElement(WhyGeneID, null);
+      case "numbers":
+        return /*#__PURE__*/React.createElement(KnowYourNumbers, null);
+      default:
+        return null;
+    }
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontFamily: "'Segoe UI',sans-serif",
+      background: LG,
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: NAVY,
+      padding: "10px 18px",
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      position: isMobile ? "static" : "sticky",
+      top: 0,
+      zIndex: 200,
+      boxShadow: "0 2px 12px rgba(0,0,0,0.3)"
+    }
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: WHITE,
+      fontWeight: 900,
+      fontSize: 16,
+      letterSpacing: 1
+    }
+  }, "GeneID"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      color: TEAL_MID,
+      fontSize: 8,
+      fontWeight: 700,
+      letterSpacing: 2,
+      textTransform: "uppercase"
+    }
+  }, "GTS Candidate Hub")), /*#__PURE__*/React.createElement("a", {
+    href: "mailto:careers@geneidlab.com",
+    style: {
+      marginLeft: "auto",
+      background: GOLD,
+      color: NAVY,
+      fontWeight: 800,
+      fontSize: 11,
+      padding: "7px 14px",
+      borderRadius: 7,
+      textDecoration: "none",
+      whiteSpace: "nowrap"
+    }
+  }, isMobile ? "Apply \u2192" : "Apply \u2192 careers@geneidlab.com")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      flexDirection: isMobile ? "column" : "row",
+      flex: 1,
+      minHeight: 0
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: isMobile ? {
+      width: "100%",
+      background: NAVY,
+      flexShrink: 0,
+      display: "flex",
+      overflowX: "auto",
+      WebkitOverflowScrolling: "touch",
+      gap: 6,
+      padding: "8px 10px",
+      position: "sticky",
+      top: 0,
+      zIndex: 200,
+      boxShadow: "0 2px 10px rgba(0,0,0,0.3)"
+    } : {
+      width: 232,
+      background: NAVY,
+      flexShrink: 0,
+      overflowY: "auto",
+      padding: "12px 0"
+    }
+  }, tabs.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.id,
+    onClick: () => setActiveTab(t.id),
+    style: isMobile ? {
+      flexShrink: 0,
+      whiteSpace: "nowrap",
+      border: "none",
+      borderRadius: 20,
+      background: activeTab === t.id ? GOLD : "rgba(255,255,255,0.08)",
+      color: activeTab === t.id ? NAVY : "rgba(255,255,255,0.85)",
+      fontWeight: activeTab === t.id ? 800 : 600,
+      fontSize: 12.5,
+      lineHeight: 1.2,
+      padding: "8px 14px",
+      cursor: "pointer"
+    } : {
+      display: "block",
+      width: "100%",
+      textAlign: "left",
+      border: "none",
+      background: activeTab === t.id ? "rgba(255,255,255,0.10)" : "transparent",
+      color: activeTab === t.id ? WHITE : "rgba(255,255,255,0.6)",
+      fontWeight: activeTab === t.id ? 700 : 400,
+      fontSize: 12.5,
+      lineHeight: 1.3,
+      padding: "9px 18px",
+      cursor: "pointer",
+      borderLeft: activeTab === t.id ? ("3px solid " + GOLD) : "3px solid transparent"
+    }
+  }, t.icon, " ", t.label))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      flex: 1,
+      minWidth: 0,
+      overflowY: "auto"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "6px 0 40px"
+    }
+  }, renderContent()), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: NAVY,
+      padding: "16px 24px",
+      textAlign: "center"
+    }
+  }, /*#__PURE__*/React.createElement("a", {
+    href: "mailto:careers@geneidlab.com",
+    style: {
+      color: GOLD,
+      fontWeight: 700,
+      fontSize: 12,
+      textDecoration: "none"
+    }
+  }, "careers@geneidlab.com"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "rgba(255,255,255,0.3)",
+      margin: "0 10px"
+    }
+  }, "|"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "rgba(255,255,255,0.4)",
+      fontSize: 11
+    }
+  }, "GeneID Advanced Molecular Diagnostics \xB7 GeneIDLab.com \xB7 Montvale, NJ \xB7 CLIA | CAP | CMS")))));
+}
+ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
+</script>
+</body>
+</html>
